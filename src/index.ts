@@ -33,12 +33,10 @@ export class StaticContextMenu implements ContextMenu{
   }
 
   public showAt(left: number, top: number, position: string = "fixed"): void {
-    if (!this.m_open){
-      show(this.m_root, left, top, position);
-      this.m_left = left;
-      this.m_top = top;
-      this.m_open = true;
-    }
+    show(this.m_root, left, top, position);
+    this.m_left = left;
+    this.m_top = top;
+    this.m_open = true;
   }
 
   public hide(): void {
@@ -62,13 +60,14 @@ export class StaticContextMenu implements ContextMenu{
     this.m_doc.body.addEventListener("click", (evt)=>{
       setTimeout(()=>{this.hide();}, 50);
     });
-    this.m_doc.body.addEventListener("contextmenu", (evt)=>{
-      if (!this.m_open){
-        this.showAt(evt.clientX, evt.clientY);
-        evt.preventDefault();
-      }
-    });
     return root;
+  }
+
+  registerOnBody(){
+    this.m_doc.body.addEventListener("contextmenu", (evt)=>{
+      this.showAt(evt.clientX, evt.clientY);
+      evt.preventDefault();
+    });
   }
 
   private item_wrapper(label: string){

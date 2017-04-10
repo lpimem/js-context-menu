@@ -1,7 +1,9 @@
+const BabiliPlugin = require('babili-webpack-plugin');
+
 module.exports = {
     entry: "./src/test.ts",
     output: {
-        filename: "bundle.js",
+        filename: "test.js",
         path: __dirname + "/dist"
     },
 
@@ -18,6 +20,11 @@ module.exports = {
             { test: /\.js$/, loader: "source-map-loader", enforce: "pre"}
         ]
     },
+
+    
+    plugins: [
+        new BabiliPlugin(),
+    ],
 
     externals: {
     },

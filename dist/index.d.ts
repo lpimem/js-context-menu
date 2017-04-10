@@ -18,6 +18,7 @@ export declare class StaticContextMenu implements ContextMenu {
     hide(): void;
     addItem(item: ContextMenuItem): void;
     private root();
+    registerOnBody(): void;
     private item_wrapper(label);
     private callback(label, cb, p);
     private item(i, p);

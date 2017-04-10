@@ -18,4 +18,8 @@ document.addEventListener("DOMContentLoaded", ()=>{
     }
   ]);
   cm.patchDefaultStyle(document);
+  document.body.addEventListener("contextmenu", (e)=>{
+    menu.showAt(e.clientX, e.clientY);
+    e.preventDefault();
+  });
 });
