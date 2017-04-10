@@ -1,0 +1,24 @@
+{
+  "name": "js-context-menu",
+  "version": "1.0.0",
+  "description": "",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/lpimem/js-context-menu.git"
+  },
+  "author": "lpimem <lowatt.pi@gmail.com>",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/lpimem/js-context-menu/issues"
+  },
+  "homepage": "https://github.com/lpimem/js-context-menu#readme",
+  "devDependencies": {
+    "awesome-typescript-loader": "^3.1.2",
+    "source-map-loader": "^0.2.1"
+  }
+}
