@@ -1,5 +1,7 @@
 # js-context-menu
 
+[![npm version](https://badge.fury.io/js/js-context-menu.svg)](https://badge.fury.io/js/js-context-menu)
+
 ## Install 
 
 ```Bash
