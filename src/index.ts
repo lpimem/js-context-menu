@@ -177,12 +177,14 @@ export function patchDefaultStyle(doc :Document){
       background-color: FFF;
       border-radius: 3px;
       box-shadow: 1px 0 5px #000;
+      user-select: none;
     }
 
     .jscm_item {
       padding: 3px 5px 3px 5px;
       font-family: sans-serif;
       color: #000;
+      user-select: none;
     }
 
     div.jscm_item:hover {
