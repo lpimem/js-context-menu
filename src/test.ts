@@ -31,6 +31,9 @@ document.addEventListener("DOMContentLoaded", ()=>{
     {
       label: "TEST DEL 3",
       content: (e)=>{console.log("TEST clicked.");}
+    }, {
+      label: "Destroy",
+      content: (e)=>{menu.destroy();}
     }, 
   ]);
 

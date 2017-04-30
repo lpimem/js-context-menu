@@ -25,6 +25,15 @@ export class ContextMenu{
   }
 
   /**
+   * uninstall context menu from document
+   */
+  public destroy(): void{
+    if (this.m_root.parentElement){
+      this.m_root.parentElement.removeChild(this.m_root);
+    }
+  }
+
+  /**
    * show menu at the given position
    */
   public showAt(left: number, top: number, position: string = "fixed"): void {

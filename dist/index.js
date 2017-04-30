@@ -17,6 +17,11 @@ define(["require", "exports"], function (require, exports) {
             this.m_root = this.root();
             container.appendChild(this.m_root);
         }
+        ContextMenu.prototype.destroy = function () {
+            if (this.m_root.parentElement) {
+                this.m_root.parentElement.removeChild(this.m_root);
+            }
+        };
         ContextMenu.prototype.showAt = function (left, top, position) {
             if (position === void 0) { position = "fixed"; }
             show(this.m_root, left, top, position);

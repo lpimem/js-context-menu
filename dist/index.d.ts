@@ -9,6 +9,7 @@ export interface ContextMenuItem {
 export declare function createMenu(doc: Document, container: HTMLElement, items: ContextMenuItem[]): ContextMenu;
 export declare class ContextMenu {
     constructor(doc: Document, container: HTMLElement);
+    destroy(): void;
     showAt(left: number, top: number, position?: string): void;
     hide(): void;
     addItem(item: ContextMenuItem): void;
