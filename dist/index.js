@@ -2,7 +2,7 @@ define(["require", "exports"], function (require, exports) {
     "use strict";
     exports.__esModule = true;
     function createMenu(doc, container, items) {
-        var menu = new StaticContextMenu(doc, container);
+        var menu = new ContextMenu(doc, container);
         for (var _i = 0, items_1 = items; _i < items_1.length; _i++) {
             var it = items_1[_i];
             menu.addItem(it);
@@ -10,21 +10,21 @@ define(["require", "exports"], function (require, exports) {
         return menu;
     }
     exports.createMenu = createMenu;
-    var StaticContextMenu = (function () {
-        function StaticContextMenu(doc, container) {
+    var ContextMenu = (function () {
+        function ContextMenu(doc, container) {
             this.m_opened_sublists = [];
             this.m_doc = doc;
             this.m_root = this.root();
             container.appendChild(this.m_root);
         }
-        StaticContextMenu.prototype.showAt = function (left, top, position) {
+        ContextMenu.prototype.showAt = function (left, top, position) {
             if (position === void 0) { position = "fixed"; }
             show(this.m_root, left, top, position);
             this.m_left = left;
             this.m_top = top;
             this.m_open = true;
         };
-        StaticContextMenu.prototype.hide = function () {
+        ContextMenu.prototype.hide = function () {
             hide(this.m_root);
             this.m_open = false;
             this.m_opened_sublists.forEach(function (v) {
@@ -32,10 +32,20 @@ define(["require", "exports"], function (require, exports) {
             });
             this.m_opened_sublists.length = 0;
         };
-        StaticContextMenu.prototype.addItem = function (item) {
+        ContextMenu.prototype.addItem = function (item) {
             this.item(item, this.m_root);
         };
-        StaticContextMenu.prototype.root = function () {
+        ContextMenu.prototype.removeItem = function (label) {
+            var nodelist = this.m_root.querySelectorAll("div[" + ATTR_LABEL + "=\"" + label + "\"]");
+            for (var i = 0; i < nodelist.length; i++) {
+                var item = nodelist.item(i);
+                console.debug("remove item " + label);
+                if (item.parentElement) {
+                    item.parentElement.removeChild(item);
+                }
+            }
+        };
+        ContextMenu.prototype.root = function () {
             var _this = this;
             var root = this.m_doc.createElement("div");
             root.className = "jscm_root";
@@ -45,73 +55,79 @@ define(["require", "exports"], function (require, exports) {
             });
             return root;
         };
-        StaticContextMenu.prototype.registerOnBody = function () {
+        ContextMenu.prototype.registerOnBody = function () {
             var _this = this;
             this.m_doc.body.addEventListener("contextmenu", function (evt) {
                 _this.showAt(evt.clientX, evt.clientY);
                 evt.preventDefault();
             });
         };
-        StaticContextMenu.prototype.item_wrapper = function (label) {
+        ContextMenu.prototype.item_wrapper = function (label) {
             var item = this.m_doc.createElement("div");
             item.innerText = label;
+            item.setAttribute(ATTR_LABEL, label);
             item.className = "jscm_item";
             return item;
         };
-        StaticContextMenu.prototype.callback = function (label, cb, p) {
+        ContextMenu.prototype.callback = function (label, cb, p) {
             var item = this.item_wrapper(label);
             item.addEventListener("click", cb);
             p.appendChild(item);
         };
-        StaticContextMenu.prototype.item = function (i, p) {
+        ContextMenu.prototype.submenu = function (i, p) {
+            var item = this.item_wrapper(i.label);
+            var sublist = this.m_doc.createElement("div");
+            sublist.className = "jscm_list";
+            for (var _i = 0, _a = i.content; _i < _a.length; _i++) {
+                var subitem = _a[_i];
+                this.item(subitem, sublist);
+            }
+            this.submenuEvents(item, sublist);
+            hide(sublist);
+            p.appendChild(item);
+            item.appendChild(sublist);
+        };
+        ContextMenu.prototype.submenuEvents = function (item, sublist) {
             var _this = this;
-            console.info(JSON.stringify(i));
+            var itemover, sublistover;
+            item.addEventListener("mouseover", function (evt) {
+                var rect = item.getBoundingClientRect();
+                show(sublist, rect.left + width(item), rect.top);
+                _this.m_opened_sublists.push(sublist);
+                itemover = true;
+            });
+            item.addEventListener("mouseout", function () {
+                itemover = false;
+                if (!sublistover) {
+                    hide(sublist);
+                }
+            });
+            sublist.addEventListener("mouseover", function () {
+                sublistover = true;
+            });
+            sublist.addEventListener("mouseout", function () {
+                hide(sublist);
+                sublistover = false;
+            });
+        };
+        ContextMenu.prototype.item = function (i, p) {
             if (!i.content) {
                 console.error("invalid item: " + i);
                 return;
             }
-            if (StaticContextMenu.isCb(i.content)) {
+            if (ContextMenu.isCb(i.content)) {
                 this.callback(i.label, i.content, p);
             }
             else {
-                var item_1 = this.item_wrapper(i.label);
-                var sublist_1 = this.m_doc.createElement("div");
-                sublist_1.className = "jscm_list";
-                for (var _i = 0, _a = i.content; _i < _a.length; _i++) {
-                    var subitem = _a[_i];
-                    this.item(subitem, sublist_1);
-                }
-                var itemover_1, sublistover_1;
-                item_1.addEventListener("mouseover", function (evt) {
-                    var rect = item_1.getBoundingClientRect();
-                    show(sublist_1, rect.left + width(item_1), rect.top);
-                    _this.m_opened_sublists.push(sublist_1);
-                    itemover_1 = true;
-                });
-                item_1.addEventListener("mouseout", function () {
-                    itemover_1 = false;
-                    if (!sublistover_1) {
-                        hide(sublist_1);
-                    }
-                });
-                sublist_1.addEventListener("mouseover", function () {
-                    sublistover_1 = true;
-                });
-                sublist_1.addEventListener("mouseout", function () {
-                    hide(sublist_1);
-                    sublistover_1 = false;
-                });
-                hide(sublist_1);
-                p.appendChild(item_1);
-                item_1.appendChild(sublist_1);
+                this.submenu(i, p);
             }
         };
-        StaticContextMenu.isCb = function (content) {
+        ContextMenu.isCb = function (content) {
             return isFunction(content);
         };
-        return StaticContextMenu;
+        return ContextMenu;
     }());
-    exports.StaticContextMenu = StaticContextMenu;
+    exports.ContextMenu = ContextMenu;
     function width(el) {
         return el.offsetWidth;
     }
@@ -141,8 +157,9 @@ define(["require", "exports"], function (require, exports) {
     }
     function patchDefaultStyle(doc) {
         var style = doc.createElement("style");
-        style.innerHTML = ".jscm_root,\n    .jscm_list {\n      padding: 0;\n      background-color: FFF;\n      border-radius: 3px;\n      box-shadow: 1px 0 5px #000;\n    }\n\n    .jscm_item {\n      padding: 3px 5px 3px 5px;\n      font-family: sans-serif;\n      color: #000;\n    }\n\n    div.jscm_item:hover {\n      padding: 3px 5px 3px 5px;\n      background-color: gray;\n      color: #FFF;\n    }";
+        style.innerHTML = ".jscm_root,\n    .jscm_list {\n      padding: 0;\n      background-color: FFF;\n      border-radius: 3px;\n      box-shadow: 1px 0 5px #000;\n      user-select: none;\n    }\n\n    .jscm_item {\n      padding: 3px 5px 3px 5px;\n      font-family: sans-serif;\n      color: #000;\n      user-select: none;\n    }\n\n    div.jscm_item:hover {\n      padding: 3px 5px 3px 5px;\n      background-color: gray;\n      color: #FFF;\n    }";
         doc.head.appendChild(style);
     }
     exports.patchDefaultStyle = patchDefaultStyle;
+    var ATTR_LABEL = "data-jcm-label";
 });

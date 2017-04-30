@@ -1,5 +1,3 @@
-
-
 export interface OnClickCallback{
   (e: MouseEvent) : void
 }
@@ -10,21 +8,15 @@ export interface ContextMenuItem{
   content : OnClickCallback | ContextMenuItem[]
 }
 
-export interface ContextMenu{
-  showAt(left: number, top: number, position?: string): void
-  hide(): void
-  addItem(item: ContextMenuItem): void
-}
-
 export function createMenu(doc: Document, container: HTMLElement, items: ContextMenuItem[]): ContextMenu{
-  let menu = new StaticContextMenu(doc, container);
+  let menu = new ContextMenu(doc, container);
   for(let it of items){
     menu.addItem(it);
   }
   return menu;
 }
 
-export class StaticContextMenu implements ContextMenu{
+export class ContextMenu{
 
   constructor(doc: Document, container: HTMLElement){
     this.m_doc = doc;
@@ -32,6 +24,9 @@ export class StaticContextMenu implements ContextMenu{
     container.appendChild(this.m_root);
   }
 
+  /**
+   * show menu at the given position
+   */
   public showAt(left: number, top: number, position: string = "fixed"): void {
     show(this.m_root, left, top, position);
     this.m_left = left;
@@ -39,6 +34,9 @@ export class StaticContextMenu implements ContextMenu{
     this.m_open = true;
   }
 
+  /**
+   * Hide the menu
+   */
   public hide(): void {
     hide(this.m_root);
     this.m_open = false;
@@ -48,8 +46,25 @@ export class StaticContextMenu implements ContextMenu{
     this.m_opened_sublists.length = 0;
   }
 
+  /**
+   * Add a new @param item to the root menu
+   */
   public addItem(item: ContextMenuItem): void {
     this.item(item, this.m_root);
+  }
+
+  /**
+   * Remove all items with label: @param label 
+   */
+  public removeItem(label: string): void{
+    let nodelist = this.m_root.querySelectorAll(`div[${ATTR_LABEL}="${label}"]`);
+    for (let i=0; i<nodelist.length; i++){
+      let item = nodelist.item(i);
+      console.debug(`remove item ${label}`);
+      if (item.parentElement){
+        item.parentElement.removeChild(item);
+      }
+    }
   }
 
   private root(){
@@ -73,6 +88,7 @@ export class StaticContextMenu implements ContextMenu{
   private item_wrapper(label: string){
     let item = this.m_doc.createElement("div");
     item.innerText = label;
+    item.setAttribute(ATTR_LABEL, label);
     item.className = "jscm_item"
     return item;
   }
@@ -83,47 +99,53 @@ export class StaticContextMenu implements ContextMenu{
     p.appendChild(item);
   }
 
+  private submenu(i: ContextMenuItem, p: HTMLElement){
+      let item = this.item_wrapper(i.label);
+      let sublist = this.m_doc.createElement("div");
+      sublist.className = "jscm_list";
+      for (let subitem of i.content as ContextMenuItem[]){
+        this.item(subitem, sublist);
+      }
+      this.submenuEvents(item, sublist);
+      hide(sublist);
+      p.appendChild(item)
+      item.appendChild(sublist);
+  }
+  
+  private submenuEvents(item: HTMLElement, sublist: HTMLElement){
+    let itemover, sublistover: boolean;
+    item.addEventListener("mouseover", (evt)=>{
+      let rect = item.getBoundingClientRect();
+      show(sublist, rect.left + width(item), rect.top);
+      this.m_opened_sublists.push(sublist);
+      itemover = true;
+    });
+    item.addEventListener("mouseout", ()=>{
+      itemover = false;
+      if (!sublistover){
+        hide(sublist);
+      }
+    });
+    sublist.addEventListener("mouseover", ()=>{
+      sublistover = true;
+    });
+    sublist.addEventListener("mouseout", ()=>{
+      hide(sublist);
+      sublistover = false;
+    });
+  }
+
   private item(i: ContextMenuItem, p: HTMLElement){
-    console.info(JSON.stringify(i));
     if (! i.content){
       console.error(`invalid item: ${i}`);
       return;
     }
-    if ( StaticContextMenu.isCb(i.content)) {
+    if ( ContextMenu.isCb(i.content)) {
       this.callback(i.label, i.content, p);
     } else {
-      let item = this.item_wrapper(i.label);
-      let sublist = this.m_doc.createElement("div");
-      sublist.className = "jscm_list";
-      for (let subitem of i.content){
-        this.item(subitem, sublist);
-      }
-      let itemover, sublistover: boolean;
-      item.addEventListener("mouseover", (evt)=>{
-        let rect = item.getBoundingClientRect();
-        show(sublist, rect.left + width(item), rect.top);
-        this.m_opened_sublists.push(sublist);
-        itemover = true;
-      });
-      item.addEventListener("mouseout", ()=>{
-        itemover = false;
-        if (!sublistover){
-          hide(sublist);
-        }
-      });
-      sublist.addEventListener("mouseover", ()=>{
-        sublistover = true;
-      });
-      sublist.addEventListener("mouseout", ()=>{
-        hide(sublist);
-        sublistover = false;
-      });
-      hide(sublist);
-      p.appendChild(item)
-      item.appendChild(sublist);
+      this.submenu(i, p);
     }
   }
-
 
   private static isCb(content: OnClickCallback | ContextMenuItem[] ): content is OnClickCallback{
     return isFunction(content);
@@ -194,3 +216,5 @@ export function patchDefaultStyle(doc :Document){
     }`;
   doc.head.appendChild(style);
 }
+
+const ATTR_LABEL = "data-jcm-label";

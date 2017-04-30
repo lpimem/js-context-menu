@@ -6,21 +6,19 @@ export interface ContextMenuItem {
     label: string;
     content: OnClickCallback | ContextMenuItem[];
 }
-export interface ContextMenu {
-    showAt(left: number, top: number, position?: string): void;
-    hide(): void;
-    addItem(item: ContextMenuItem): void;
-}
 export declare function createMenu(doc: Document, container: HTMLElement, items: ContextMenuItem[]): ContextMenu;
-export declare class StaticContextMenu implements ContextMenu {
+export declare class ContextMenu {
     constructor(doc: Document, container: HTMLElement);
     showAt(left: number, top: number, position?: string): void;
     hide(): void;
     addItem(item: ContextMenuItem): void;
+    removeItem(label: string): void;
     private root();
     registerOnBody(): void;
     private item_wrapper(label);
     private callback(label, cb, p);
+    private submenu(i, p);
+    private submenuEvents(item, sublist);
     private item(i, p);
     private static isCb(content);
     private m_doc;
